@@ -64,10 +64,6 @@ if node[:awscli][:config_profiles]
       action :nothing
     end
   end
-  if node[:awscli][:compile_time]
-    r.run_action(:create)
-  end
-end
   s = template credentials_file do
     mode 00600
     owner user
@@ -78,6 +74,7 @@ end
     end
   end
   if node[:awscli][:compile_time]
+    r.run_action(:create)
     s.run_action(:create)
   end
 end
