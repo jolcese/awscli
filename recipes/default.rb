@@ -24,8 +24,10 @@ if node[:awscli][:config_profiles]
   user = node[:awscli][:user]
   if user == 'root'
     config_file = "/#{user}/.aws/config"
+    credentials_file = "/#{user}/.aws/credentials"
   else
     config_file = "/home/#{user}/.aws/config"
+    credentials_file = "/home/#{user}/.aws/credentials"
   end
 
   r = directory ::File.dirname(config_file) do
@@ -38,8 +40,19 @@ if node[:awscli][:config_profiles]
       action :nothing
     end
   end
+  s = directory ::File.dirname(credentials_file) do
+    recursive true
+    owner user
+    group user
+    mode 00700
+    not_if { ::File.exist?(::File.dirname(credentials_file)) }
+    if node[:awscli][:compile_time]
+      action :nothing
+    end
+  end
   if node[:awscli][:compile_time]
     r.run_action(:create)
+    s.run_action(:create)
   end
 
   r = template config_file do
@@ -53,6 +66,19 @@ if node[:awscli][:config_profiles]
   end
   if node[:awscli][:compile_time]
     r.run_action(:create)
+  end
+end
+  s = template credentials_file do
+    mode 00600
+    owner user
+    group user
+    source 'config.erb'
+    if node[:awscli][:compile_time]
+      action :nothing
+    end
+  end
+  if node[:awscli][:compile_time]
+    s.run_action(:create)
   end
 end
 
